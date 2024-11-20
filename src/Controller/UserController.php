@@ -20,12 +20,12 @@ class UserController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (empty($data['email']) || empty($data['password'])) {
-            return new JsonResponse(['error' => 'Email and password are required'], 400);
+            return new JsonResponse(['error' => 'L\'email et le mot de passe sont requis.'], 400);
         }
 
         $existingUser = $entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
         if ($existingUser) {
-            return new JsonResponse(['error' => 'L\'email renseigné à déjà été utilisé'], 409);
+            return new JsonResponse(['error' => 'Cet utilisateur existe déjà.'], 409);
         }
 
         $user = new User();
@@ -35,6 +35,6 @@ class UserController extends AbstractController
         $entityManager->persist($user);
         $entityManager->flush();
 
-        return new JsonResponse(['message' => 'User created successfully'], 201);
+        return new JsonResponse(['message' => 'Utilisateur créé avec succès.'], 201);
     }
 }
