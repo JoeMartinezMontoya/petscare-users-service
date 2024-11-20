@@ -19,18 +19,15 @@ class UserController extends AbstractController
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
-        // Valider les données reçues
         if (empty($data['email']) || empty($data['password'])) {
             return new JsonResponse(['error' => 'Email and password are required'], 400);
         }
 
-        // Vérifier si l'utilisateur existe déjà
         $existingUser = $entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
         if ($existingUser) {
-            return new JsonResponse(['error' => 'User already exists'], 409);
+            return new JsonResponse(['error' => 'L\'email renseigné à déjà été utilisé'], 409);
         }
 
-        // Créer un nouvel utilisateur
         $user = new User();
         $user->setEmail($data['email']);
         $user->setPassword($passwordHasher->hashPassword($user, $data['password']));
