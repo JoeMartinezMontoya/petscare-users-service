@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use phpDocumentor\Reflection\Types\Void_;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,5 +37,24 @@ class UserController extends AbstractController
         $entityManager->flush();
 
         return new JsonResponse(['message' => 'Utilisateur créé avec succès.'], 201);
+    }
+
+    #[Route('api/user-repo', name: 'user_repo', methods: ['POST'])]
+    public function userRepository(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
+
+        if (!$user || !$passwordHasher->isPasswordValid($user, $data['password'])) {
+            return new JsonResponse(['error' => 'Identifiants incorrects'], 401);
+        }
+
+
+        return new JsonResponse(['message' => 'Utilisateur identifié.'], 200);
+
     }
 }
