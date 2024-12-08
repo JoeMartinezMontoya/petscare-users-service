@@ -3,7 +3,6 @@ namespace App\Controller;
 
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
-use phpDocumentor\Reflection\Types\Void_;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,7 +11,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class UserController extends AbstractController
 {
-    #[Route('api/users', name: 'create_user', methods: ['POST'])]
+    #[Route('api/users', name: 'create_user_old', methods: ['POST'])]
     public function createUser(
         Request $request,
         EntityManagerInterface $entityManager,
@@ -55,6 +54,27 @@ class UserController extends AbstractController
 
 
         return new JsonResponse(['message' => 'Utilisateur identifié.'], 200);
+    }
 
+    #[Route('api/get-user-data', name: 'get_user_data', methods: ['POST'])]
+    public function getUserData(
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
+        return new JsonResponse($user, 200);
+    }
+
+    #[Route('/api/debug', name: 'user_debug', methods: ['POST'])]
+    public function debug(
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        // $data = json_decode($request->getContent(), true);
+
+        // $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
+        return new JsonResponse($request, 200);
     }
 }
