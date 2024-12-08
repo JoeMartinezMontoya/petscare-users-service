@@ -52,7 +52,39 @@ class UserService
         return [
             'success' => true,
             'message' => 'Utilisateur enregistré en BDD',
-            'source' => 'UserService::CreateUser'
+            'source' => 'UserService::createUser'
         ];
     }
+
+    public function checkUserCredentials(string $email, string $password)
+    {
+        $user = $this->findUserByEmail($email);
+
+        if ($user && $this->verifyPassword($user, $password)) {
+            return [
+                'success' => true,
+                'message' => 'Identifiants correct',
+                'source' => 'UserService::checkUserCredentials',
+                'code' => 200
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Identifiants incorrect',
+            'source' => 'UserService::checkUserCredentials',
+            'code' => 409
+        ];
+    }
+
+    public function findUserByEmail(string $email): ?User
+    {
+        return $this->userRepository->findOneBy(['email' => $email]);
+    }
+
+    public function verifyPassword(User $user, string $password): bool
+    {
+        return $this->userPasswordHasherInterface->isPasswordValid($user, $password);
+    }
+
 }

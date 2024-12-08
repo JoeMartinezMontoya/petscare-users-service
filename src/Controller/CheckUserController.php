@@ -29,7 +29,7 @@ class CheckUserController extends AbstractController
         $user = $this->userService->findByEmail($email);
 
         if (!$user) {
-            return new JsonResponse([], 200);
+            return new JsonResponse([], 204);
         }
 
         return new JsonResponse($user, 200);
