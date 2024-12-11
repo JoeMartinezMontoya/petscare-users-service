@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Repository\UserRepository;
 use App\Entity\User;
@@ -17,42 +18,48 @@ class UserService
         $this->userPasswordHasherInterface = $userPasswordHasherInterface;
     }
 
-    public function findByEmail(string $email): array|null
+    public function checkIfUserExists(string $email): bool
     {
         $user = $this->userRepository->findOneBy(['email' => $email]);
-
-        if (!$user) {
-            return null;
-        }
-
-        return [
-            'id' => $user->getId(),
-            'email' => $user->getEmail()
-        ];
+        return gettype($user) === "object";
     }
 
     public function createUser(array $data)
     {
-        $existingUser = $this->userRepository->findOneBy(['email' => $data['email']]);
+        if (!$this->checkIfUserExists($data['email'])) {
+            $user = new User();
+            $birthdate = \DateTimeImmutable::createFromFormat('Y-m-d', $data['birthdate']);
+            if (!$birthdate) {
+                throw new \InvalidArgumentException('La date de naissance fournie est invalide.');
+            }
+            $user->setEmail($data['email'])
+                ->setPassword($this->userPasswordHasherInterface->hashPassword($user, $data['password']))
+                ->setUserName($data['username'])
+                ->setFirstName($data['firstname'])
+                ->setLastName($data['lastname'])
+                ->setBirthDate($birthdate)
+                ->setCreatedAt(new \DateTimeImmutable())
+                ->setRoles(['ROLE_USER']);
 
-        if ($existingUser) {
+            $this->userRepository->persistUser($user);
+
             return [
-                'success' => false,
-                'message' => "L'utilisateur existe déjà",
-                'source' => 'UserService::CreateUser'
+                "source" => 'UserService::createUser',
+                "type" => "https://example.com/probs/invalid-data",
+                "title" => "Inscription effectuée",
+                "status" => Response::HTTP_CREATED,
+                "detail" => "Votre compte a été créer avec succès",
+                "message" => "Tudu bon"
             ];
         }
 
-        $user = new User();
-        $user->setEmail($data['email']);
-        $user->setPassword($this->userPasswordHasherInterface->hashPassword($user, $data['password']));
-
-        $this->userRepository->persistUser($user);
-
         return [
-            'success' => true,
-            'message' => 'Utilisateur enregistré en BDD',
-            'source' => 'UserService::createUser'
+            "source" => 'UserService::createUser',
+            "type" => "https://example.com/probs/invalid-data",
+            "title" => "Inscription annulée",
+            "status" => Response::HTTP_CONFLICT,
+            "detail" => "L'adresse email est déjà associé à un utilisateur",
+            "message" => "Tudu pas bon"
         ];
     }
 

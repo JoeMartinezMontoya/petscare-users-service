@@ -26,6 +26,8 @@ class TokenValidationListener
         $excludedPaths = [
             '/api/auth/login-user',  // Route de connexion
             '/api/auth/register-user', // Route d'inscription si applicable
+            '/api/users/create-user',
+            '/api/users/check-user',
             '/api/users/check-user-credentials',
         ];
 

@@ -4,17 +4,21 @@ namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
+use Psr\Log\LoggerInterface;
 use App\Service\UserService;
 
 class CreateUserController extends AbstractController
 {
     private UserService $userService;
+    private LoggerInterface $loggerInterface;
 
-    public function __construct(UserService $userService)
+    public function __construct(UserService $userService, LoggerInterface $loggerInterface)
     {
         $this->userService = $userService;
+        $this->loggerInterface = $loggerInterface;
     }
 
     #[Route('/api/users/create-user', name: 'create_user', methods: ['POST'])]
@@ -22,28 +26,30 @@ class CreateUserController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
+        $this->loggerInterface->info("Contenu de la requête: " . json_encode($data));
+
         if (!$data || !isset($data['email'], $data['password'])) {
             return new JsonResponse([
-                'success' => false,
-                'error' => 'Données invalide',
-                'source' => 'CreateUserController'
-            ], 400);
+                "source" => 'CreateUserController',
+                "type" => "https://example.com/probs/invalid-data",
+                "title" => "Données invalide",
+                "status" => Response::HTTP_BAD_REQUEST,
+                "detail" => "Une adresse mail et un mot de passe sont requis",
+                "message" => "Invalid input data for registration."
+            ], Response::HTTP_BAD_REQUEST);
         }
 
         $result = $this->userService->createUser($data);
 
-        if (!$result['success']) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $result['message'],
-                'source' => 'CreateUserController'
-            ], 400);
-        }
+        $this->loggerInterface->info("Resultat: " . json_encode($result));
 
         return new JsonResponse([
-            'success' => true,
-            'message' => 'Utilisateur crée',
-            'source' => 'CreateUserController'
-        ], 201);
+            "source" => 'CreateUserController',
+            "type" => "https://example.com/probs/invalid-data",
+            "title" => $result['title'],
+            "status" => $result['status'],
+            "detail" => $result['detail'],
+            "message" => $result['message']
+        ], Response::HTTP_OK);
     }
 }
