@@ -2,10 +2,10 @@
 
 namespace App\EventListener;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Psr\Log\LoggerInterface;
 
 class TokenValidationListener
 {
@@ -14,7 +14,7 @@ class TokenValidationListener
 
     public function __construct(HttpClientInterface $httpClient, LoggerInterface $loggerInterface)
     {
-        $this->httpClient = $httpClient;
+        $this->httpClient      = $httpClient;
         $this->loggerInterface = $loggerInterface;
     }
 
@@ -24,7 +24,7 @@ class TokenValidationListener
 
         // Liste des routes à ignorer
         $excludedPaths = [
-            '/api/auth/login-user',  // Route de connexion
+            '/api/auth/login-user', // Route de connexion
             '/api/auth/register-user', // Route d'inscription si applicable
             '/api/users/create-user',
             '/api/users/check-user',
@@ -48,7 +48,7 @@ class TokenValidationListener
 
         try {
             // Envoie le token pour validation
-            $token = str_replace('Bearer ', '', $authHeader);
+            $token    = str_replace('Bearer ', '', $authHeader);
             $response = $this->httpClient->request('POST', $_ENV['AUTH_SERVICE_BASE_URL'] . '/api/validate-token', [
                 'json' => ['token' => $token],
             ]);
@@ -71,8 +71,5 @@ class TokenValidationListener
             $this->loggerInterface->error("Erreur lors de la validation du token: " . $e->getMessage());
             throw new UnauthorizedHttpException('Bearer', 'Erreur lors de la validation du token.');
         }
-
-        // On peut faire un dd() ici si tu veux vérifier l'exécution
-        // dd('On arrive jusqu\'ici');
     }
 }

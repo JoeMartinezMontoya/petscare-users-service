@@ -2,13 +2,13 @@
 
 namespace App\Controller;
 
+use App\Service\UserService;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\Request;
-use Psr\Log\LoggerInterface;
-use App\Service\UserService;
 
 class CreateUserController extends AbstractController
 {
@@ -17,7 +17,7 @@ class CreateUserController extends AbstractController
 
     public function __construct(UserService $userService, LoggerInterface $loggerInterface)
     {
-        $this->userService = $userService;
+        $this->userService     = $userService;
         $this->loggerInterface = $loggerInterface;
     }
 
@@ -30,12 +30,12 @@ class CreateUserController extends AbstractController
 
         if (!$data || !isset($data['email'], $data['password'])) {
             return new JsonResponse([
-                "source" => 'CreateUserController',
-                "type" => "https://example.com/probs/invalid-data",
-                "title" => "Données invalide",
-                "status" => Response::HTTP_BAD_REQUEST,
-                "detail" => "Une adresse mail et un mot de passe sont requis",
-                "message" => "Invalid input data for registration."
+                "source"  => 'CreateUserController',
+                "type"    => "https://example.com/probs/invalid-data",
+                "title"   => "Données invalide",
+                "status"  => Response::HTTP_BAD_REQUEST,
+                "detail"  => "Une adresse mail et un mot de passe sont requis",
+                "message" => "Invalid input data for registration.",
             ], Response::HTTP_BAD_REQUEST);
         }
 
@@ -44,12 +44,12 @@ class CreateUserController extends AbstractController
         $this->loggerInterface->info("Resultat: " . json_encode($result));
 
         return new JsonResponse([
-            "source" => 'CreateUserController',
-            "type" => "https://example.com/probs/invalid-data",
-            "title" => $result['title'],
-            "status" => $result['status'],
-            "detail" => $result['detail'],
-            "message" => $result['message']
+            "source"  => 'CreateUserController',
+            "type"    => "https://example.com/probs/invalid-data",
+            "title"   => $result['title'],
+            "status"  => $result['status'],
+            "detail"  => $result['detail'],
+            "message" => $result['message'],
         ], Response::HTTP_OK);
     }
 }
