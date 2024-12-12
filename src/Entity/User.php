@@ -30,13 +30,13 @@ class User implements PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $lastName = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column]
     private ?\DateTimeImmutable $birthDate = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\Column(type: Types::ARRAY )]
+    #[ORM\Column(type : Types::JSON)]
     private array $roles = [];
 
     public function getId(): ?int
