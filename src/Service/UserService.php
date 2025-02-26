@@ -1,102 +1,114 @@
 <?php
-
 namespace App\Service;
 
 use App\Entity\User;
+use App\Exception\ApiException;
 use App\Repository\UserRepository;
-use Symfony\Component\HttpFoundation\Response;
+use App\Utils\HttpStatusCodes;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserService
 {
     private UserRepository $userRepository;
-    private UserPasswordHasherInterface $userPasswordHasherInterface;
+    private UserPasswordHasherInterface $passwordHasher;
 
-    public function __construct(UserRepository $userRepository, UserPasswordHasherInterface $userPasswordHasherInterface)
+    public function __construct(UserRepository $userRepository, UserPasswordHasherInterface $passwordHasher)
     {
-        $this->userRepository              = $userRepository;
-        $this->userPasswordHasherInterface = $userPasswordHasherInterface;
+        $this->userRepository = $userRepository;
+        $this->passwordHasher = $passwordHasher;
     }
 
     public function createUser(array $data): array
     {
-        if (!$this->checkIfUserExists($data['email'])) {
-            $user      = new User();
-            $birthdate = \DateTimeImmutable::createFromFormat('Y-m-d', $data['birthdate']);
-            if (!$birthdate) {
-                throw new \InvalidArgumentException('La date de naissance fournie est invalide.');
-            }
-            $user->setEmail($data['email'])
-                ->setPassword($this->userPasswordHasherInterface->hashPassword($user, $data['password']))
-                ->setUserName($data['username'])
-                ->setFirstName($data['firstname'])
-                ->setLastName($data['lastname'])
-                ->setBirthDate($birthdate)
-                ->setCreatedAt(new \DateTimeImmutable())
-                ->setRoles(['ROLE_USER']);
-
-            $this->userRepository->persistUser($user);
-
-            return [
-                "source"  => 'UserService::createUser',
-                "type"    => "https://example.com/probs/invalid-data",
-                "title"   => "Inscription effectuée",
-                "status"  => Response::HTTP_CREATED,
-                "detail"  => "Votre compte a été créer avec succès",
-                "message" => "Tudu bon",
-            ];
+        if ($this->userExists($data['email'])) {
+            return $this->buildErrorResponse(
+                "UserService::createUser",
+                "Inscription annulée",
+                "L'adresse email est déjà associée à un utilisateur",
+                HttpStatusCodes::CONFLICT
+            );
         }
 
-        return [
-            "source"  => 'UserService::createUser',
-            "type"    => "https://example.com/probs/invalid-data",
-            "title"   => "Inscription annulée",
-            "status"  => Response::HTTP_CONFLICT,
-            "detail"  => "L'adresse email est déjà associé à un utilisateur",
-            "message" => "Tudu pas bon",
-        ];
+        $birthdate = \DateTimeImmutable::createFromFormat('Y-m-d', $data['birthdate']);
+        if (! $birthdate) {
+            throw new ApiException(
+                "Invalid birthdate format",
+                "La date de naissance fournie est invalide.",
+                "Format attendu : YYYY-MM-DD",
+                HttpStatusCodes::BAD_REQUEST
+            );
+        }
+
+        $user = (new User())
+            ->setEmail($data['email'])
+            ->setPassword($this->passwordHasher->hashPassword(new User(), $data['password']))
+            ->setUserName($data['username'])
+            ->setFirstName($data['firstname'])
+            ->setLastName($data['lastname'])
+            ->setBirthDate($birthdate)
+            ->setCreatedAt(new \DateTimeImmutable())
+            ->setRoles(['ROLE_USER']);
+
+        $this->userRepository->persistUser($user);
+
+        return $this->buildSuccessResponse(
+            "UserService::createUser",
+            "Inscription effectuée",
+            "Votre compte a été créé avec succès",
+            HttpStatusCodes::CREATED
+        );
     }
 
     public function checkUserCredentials(array $data): array
     {
-        $user = $this->findUserByEmail($data['email']);
+        $user = $this->userRepository->findOneBy(['email' => $data['email']]);
 
-        if ($user && $this->verifyPassword($user, $data['password'])) {
-            return [
-                "source"  => "UserService::checkUserCredentials",
-                "type"    => "https://example.com/probs/invalid-data",
-                "title"   => "Connexion acceptée",
-                "status"  => Response::HTTP_OK,
-                "detail"  => "Identifiants valide",
-                "message" => "Bonjour {$user->getUsername()}",
-                "email"   => $user->getEmail(),
-            ];
+        if ($user && $this->passwordHasher->isPasswordValid($user, $data['password'])) {
+            return array_merge(
+                $this->buildSuccessResponse(
+                    "UserService::checkUserCredentials",
+                    "Connexion acceptée",
+                    "Identifiants valides",
+                    HttpStatusCodes::SUCCESS
+                ),
+                ["email" => $user->getEmail()]
+            );
         }
 
+        return $this->buildErrorResponse(
+            "UserService::checkUserCredentials",
+            "Connexion impossible",
+            "Identifiants invalides",
+            HttpStatusCodes::UNAUTHORIZED
+        );
+    }
+
+    private function userExists(string $email): bool
+    {
+        return $this->userRepository->findOneBy(['email' => $email]) !== null;
+    }
+
+    private function buildSuccessResponse(string $source, string $title, string $detail, int $status): array
+    {
         return [
-            "source"  => "UserService::checkUserCredentials",
-            "type"    => "https://example.com/probs/invalid-data",
-            "title"   => "Connexion impossible",
-            "status"  => Response::HTTP_UNAUTHORIZED,
-            "detail"  => "Identifiants invalide",
-            "message" => "Non",
+            "source"  => $source,
+            "type"    => "https://example.com/probs/success",
+            "title"   => $title,
+            "status"  => $status,
+            "detail"  => $detail,
+            "message" => "Opération réussie",
         ];
     }
 
-    public function checkIfUserExists(string $email): bool
+    private function buildErrorResponse(string $source, string $title, string $detail, int $status): array
     {
-        $user = $this->userRepository->findOneBy(['email' => $email]);
-        return gettype($user) === "object";
+        return [
+            "source"  => $source,
+            "type"    => "https://example.com/probs/error",
+            "title"   => $title,
+            "status"  => $status,
+            "detail"  => $detail,
+            "message" => "Erreur rencontrée",
+        ];
     }
-
-    public function findUserByEmail(string $email): ?User
-    {
-        return $this->userRepository->findOneBy(['email' => $email]);
-    }
-
-    public function verifyPassword(User $user, string $password): bool
-    {
-        return $this->userPasswordHasherInterface->isPasswordValid($user, $password);
-    }
-
 }

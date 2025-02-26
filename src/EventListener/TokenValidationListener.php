@@ -1,5 +1,4 @@
 <?php
-
 namespace App\EventListener;
 
 use Psr\Log\LoggerInterface;
@@ -24,7 +23,7 @@ class TokenValidationListener
 
         // Liste des routes à ignorer
         $excludedPaths = [
-            '/api/auth/login-user', // Route de connexion
+            '/api/auth/login-user',    // Route de connexion
             '/api/auth/register-user', // Route d'inscription si applicable
             '/api/users/create-user',
             '/api/users/check-user',
@@ -42,7 +41,7 @@ class TokenValidationListener
         $authHeader = $request->headers->get('Authorization');
         $this->loggerInterface->info("Authorization Header: " . $authHeader);
 
-        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+        if (! $authHeader || ! str_starts_with($authHeader, 'Bearer ')) {
             throw new UnauthorizedHttpException('Bearer', 'Token manquant ou invalide.');
         }
 
@@ -52,7 +51,6 @@ class TokenValidationListener
             $response = $this->httpClient->request('POST', $_ENV['AUTH_SERVICE_BASE_URL'] . '/api/validate-token', [
                 'json' => ['token' => $token],
             ]);
-
             // Si la validation échoue, renvoie une erreur
             if ($response->getStatusCode() !== 200) {
                 throw new UnauthorizedHttpException('Bearer', 'Token invalide.');

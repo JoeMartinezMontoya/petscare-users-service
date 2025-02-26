@@ -20,3 +20,7 @@ services:
     tags:
       - { name: kernel.event_listener, event: kernel.request, priority: 10 }
     public: true
+
+  App\EventListener\ApiExceptionListener:
+    tags: 
+      - { name: kernel.event_listener, event: kernel.exception }
