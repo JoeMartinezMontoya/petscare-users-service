@@ -20,9 +20,10 @@ class UserService
 
     public function createUser(array $data): string | null
     {
-        if (! $this->userExists($data['email']) instanceof User) {
+        $user = $this->userExists($data['email']);
+        if (null !== $user) {
             throw new ApiException(
-                "Registration canceled",
+                "Registration Canceled",
                 "Email already used",
                 "Please input another email adress",
                 HttpStatusCodes::CONFLICT
@@ -70,17 +71,8 @@ class UserService
         return $user->getEmail();
     }
 
-    public function userExists(string $email): User
+    public function userExists(string $email): User | null
     {
-        $user = $this->userRepository->findOneBy(['email' => $email]);
-        if (! $user instanceof User) {
-            throw new ApiException(
-                "User Not Found",
-                "User Not Found",
-                "No user found associated to $email",
-                HttpStatusCodes::NOT_FOUND
-            );
-        }
-        return $user;
+        return $this->userRepository->findOneBy(['email' => $email]) ?? null;
     }
 }

@@ -24,12 +24,11 @@ class ShowUserController extends AbstractController
         $userEmail = $request->attributes->get('email');
 
         if (! $userEmail) {
-            return ApiResponse::error(
-                "Missing Parameter",
-                "Email parameter is missing in the request.",
-                "Email is required to fetch user data.",
-                HttpStatusCodes::BAD_REQUEST
-            );
+            return ApiResponse::error([
+                "title"   => "Missing Parameter",
+                "detail"  => "Email parameter is missing in the request",
+                "message" => "Email is required to fetch user data",
+            ], HttpStatusCodes::BAD_REQUEST);
         }
 
         try {
@@ -38,19 +37,20 @@ class ShowUserController extends AbstractController
             return ApiResponse::success(["user" => json_decode($jsonUser, true)], HttpStatusCodes::SUCCESS);
         } catch (\Exception $e) {
             if ($e instanceof ApiException) {
-                return ApiResponse::error(
-                    $e->getTitle(),
-                    $e->getDetail(),
-                    $e->getMessage(),
-                    $e->getStatusCode()
-                );
+                if ($e instanceof ApiException) {
+                    return ApiResponse::error([
+                        "title"   => $e->getTitle(),
+                        "detail"  => $e->getDetail(),
+                        "message" => $e->getMessage(),
+                    ], $e->getStatusCode());
+                }
+
+                return ApiResponse::error([
+                    "title"   => "Unexpected Error",
+                    "detail"  => "An unexpected error occurred while fetching the user's data",
+                    "message" => $e->getMessage(),
+                ], HttpStatusCodes::SERVER_ERROR);
             }
-            return ApiResponse::error(
-                "Unexpected Error",
-                "An unexpected error occurred while creating the user",
-                $e->getMessage(),
-                HttpStatusCodes::SERVER_ERROR
-            );
         }
     }
 }

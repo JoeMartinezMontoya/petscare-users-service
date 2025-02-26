@@ -9,19 +9,19 @@ class ApiResponse
     {
         return new JsonResponse(array_merge([
             "type"    => "users-service-success",
-            "title"   => "Success",
-            "detail"  => $data['detail'] ?? "Operation completed successfully.",
-            "message" => $data['message'] ?? "Request processed successfully.",
+            "title"   => $data['title'] ?? "Success",
+            "detail"  => $data['detail'] ?? "Operation completed successfully",
+            "message" => $data['message'] ?? "Request processed successfully",
         ], $data), $status);
     }
 
-    public static function error(string $title = "An error occurred", string $detail = "No details provided", string $message = "An unexpected error occurred", int $status = HttpStatusCodes::SERVER_ERROR): JsonResponse
+    public static function error(array $data, int $status = HttpStatusCodes::SERVER_ERROR): JsonResponse
     {
-        return new JsonResponse([
+        return new JsonResponse(array_merge([
             "type"    => "users-service-error",
-            "title"   => $title,
-            "detail"  => $detail,
-            "message" => $message,
-        ], $status);
+            "title"   => $data['title'] ?? "Error",
+            "detail"  => $data['detail'] ?? "Operation canceled",
+            "message" => $data['message'] ?? "Request canceled",
+        ], $data), $status);
     }
 }

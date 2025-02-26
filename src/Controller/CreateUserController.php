@@ -18,12 +18,11 @@ class CreateUserController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         if (! $data) {
-            return ApiResponse::error(
-                "Invalid JSON Payload",
-                "The request body is not a valid JSON",
-                "Invalid data provided",
-                HttpStatusCodes::BAD_REQUEST
-            );
+            return ApiResponse::error([
+                "title"   => "Invalid JSON Payload",
+                "detail"  => "The request body is not a valid JSON",
+                "message" => "Invalid data provided",
+            ], HttpStatusCodes::BAD_REQUEST);
         }
 
         try {
@@ -34,19 +33,18 @@ class CreateUserController extends AbstractController
             ], HttpStatusCodes::CREATED);
         } catch (\Exception $e) {
             if ($e instanceof ApiException) {
-                return ApiResponse::error(
-                    $e->getTitle(),
-                    $e->getDetail(),
-                    $e->getMessage(),
-                    $e->getStatusCode()
-                );
+                return ApiResponse::error([
+                    "title"   => $e->getTitle(),
+                    "detail"  => $e->getDetail(),
+                    "message" => $e->getMessage(),
+                ], $e->getStatusCode());
             }
-            return ApiResponse::error(
-                "Unexpected Error",
-                "An unexpected error occurred while creating the user",
-                $e->getMessage(),
-                HttpStatusCodes::SERVER_ERROR
-            );
+
+            return ApiResponse::error([
+                "title"   => "Unexpected Error",
+                "detail"  => "An unexpected error occurred while creating the user",
+                "message" => $e->getMessage(),
+            ], HttpStatusCodes::SERVER_ERROR);
         }
     }
 }
