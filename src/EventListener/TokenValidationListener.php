@@ -1,9 +1,10 @@
 <?php
 namespace App\EventListener;
 
+use App\Exception\ApiException;
+use App\Utils\HttpStatusCodes;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class TokenValidationListener
@@ -39,25 +40,45 @@ class TokenValidationListener
             ]);
 
             if ($response->getStatusCode() !== 200) {
-                throw new UnauthorizedHttpException('Bearer', 'Token invalide.');
+                throw new ApiException(
+                    "Invalid Token",
+                    "Invalid bearer token",
+                    "Invalid bearer token",
+                    HttpStatusCodes::UNAUTHORIZED
+                );
             }
 
             $payload = $response->toArray();
 
             if (! isset($payload['email'])) {
-                throw new UnauthorizedHttpException('Bearer', 'Réponse invalide du service d’authentification.');
+                throw new ApiException(
+                    "Invalid Token",
+                    "Invalid response",
+                    "Invalid authentication respons, email adress missing",
+                    HttpStatusCodes::UNAUTHORIZED
+                );
             }
 
             $request->attributes->set('email', $payload['email']);
         } catch (\Exception $e) {
-            throw new UnauthorizedHttpException('Bearer', 'Erreur lors de la validation du token.');
+            throw new ApiException(
+                "Validation Impossible",
+                "Validation impossible",
+                "Could not validate token",
+                HttpStatusCodes::UNAUTHORIZED
+            );
         }
     }
 
     private function extractToken(?string $authHeader): string
     {
         if (! $authHeader || ! str_starts_with($authHeader, 'Bearer ')) {
-            throw new UnauthorizedHttpException('Bearer', 'Token manquant ou invalide.');
+            throw new ApiException(
+                "Missing Token",
+                "Missing bearer token",
+                "Missing bearer token",
+                HttpStatusCodes::UNAUTHORIZED
+            );
         }
 
         return substr($authHeader, 7);

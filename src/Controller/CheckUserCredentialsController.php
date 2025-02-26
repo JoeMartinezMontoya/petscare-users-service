@@ -32,7 +32,7 @@ class CheckUserCredentialsController extends AbstractController
             return ApiResponse::success([
                 "detail"  => "Login successful",
                 "message" => "Welcome back",
-                "mail"    => $response,
+                "email"   => $response,
             ], HttpStatusCodes::SUCCESS);
 
         } catch (\Exception $e) {
