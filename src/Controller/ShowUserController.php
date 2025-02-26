@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use App\Exception\ApiException;
 use App\Service\UserService;
 use App\Utils\ApiResponse;
 use App\Utils\HttpStatusCodes;
@@ -24,7 +25,6 @@ class ShowUserController extends AbstractController
 
         if (! $userEmail) {
             return ApiResponse::error(
-                "missing-parameter",
                 "Missing Parameter",
                 "Email parameter is missing in the request.",
                 "Email is required to fetch user data.",
@@ -33,26 +33,21 @@ class ShowUserController extends AbstractController
         }
 
         try {
-            $user = $userService->userExists($userEmail);
-
-            if (! $user) {
+            $user     = $userService->userExists($userEmail);
+            $jsonUser = $serializer->serialize($user, 'json');
+            return ApiResponse::success(["user" => json_decode($jsonUser, true)], HttpStatusCodes::SUCCESS);
+        } catch (\Exception $e) {
+            if ($e instanceof ApiException) {
                 return ApiResponse::error(
-                    "user-not-found",
-                    "User Not Found",
-                    "No user found with the given email.",
-                    "Please check the email and try again.",
-                    HttpStatusCodes::NOT_FOUND
+                    $e->getTitle(),
+                    $e->getDetail(),
+                    $e->getMessage(),
+                    $e->getStatusCode()
                 );
             }
-
-            $jsonUser = $serializer->serialize($user, 'json');
-            return ApiResponse::success(json_decode($jsonUser, true));
-        } catch (\Exception $e) {
-            $logger->error('Error fetching user', ['message' => $e->getMessage()]);
             return ApiResponse::error(
-                "internal-server-error",
                 "Unexpected Error",
-                "An error occurred while retrieving user information.",
+                "An unexpected error occurred while creating the user",
                 $e->getMessage(),
                 HttpStatusCodes::SERVER_ERROR
             );

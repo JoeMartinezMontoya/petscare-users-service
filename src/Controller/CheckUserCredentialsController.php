@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use App\Exception\ApiException;
 use App\Service\UserService;
 use App\Utils\ApiResponse;
 use App\Utils\HttpStatusCodes;
@@ -19,36 +20,36 @@ class CheckUserCredentialsController extends AbstractController
 
         if (! $data) {
             return ApiResponse::error(
-                "invalid-json",
                 "Invalid JSON Payload",
-                "The request body is not a valid JSON.",
-                "Invalid data provided.",
+                "The request body is not a valid JSON",
+                "Invalid data provided",
                 HttpStatusCodes::BAD_REQUEST
             );
         }
 
         try {
-            $response = $userService->checkUserCredentials($data);
 
-            if (HttpStatusCodes::SUCCESS !== $response['status']) {
+            $response = $userService->checkUserCredentials($data);
+            return ApiResponse::success([
+                "detail"  => "Login successful",
+                "message" => "Welcome back",
+                "mail"    => $response,
+            ], HttpStatusCodes::SUCCESS);
+
+        } catch (\Exception $e) {
+
+            if ($e instanceof ApiException) {
                 return ApiResponse::error(
-                    "invalid-credentials",
-                    $response['title'] ?? "Authentication Failed",
-                    $response['detail'] ?? "Invalid user credentials.",
-                    $response['message'] ?? "Please check your email and password.",
-                    $response['status']
+                    $e->getTitle(),
+                    $e->getDetail(),
+                    $e->getMessage(),
+                    $e->getStatusCode()
                 );
             }
 
-            return ApiResponse::success([
-                'email' => $response['email'],
-            ], HttpStatusCodes::SUCCESS);
-        } catch (\Exception $e) {
-            $logger->error('User authentication failed', ['message' => $e->getMessage()]);
             return ApiResponse::error(
-                "internal-server-error",
                 "Unexpected Error",
-                "An unexpected error occurred while checking credentials.",
+                "An unexpected error occurred while creating the user",
                 $e->getMessage(),
                 HttpStatusCodes::SERVER_ERROR
             );

@@ -20,7 +20,7 @@ class UserService
 
     public function createUser(array $data): string | null
     {
-        if (null !== $this->userExists($data['email'])) {
+        if (! $this->userExists($data['email']) instanceof User) {
             throw new ApiException(
                 "Registration canceled",
                 "Email already used",
@@ -54,32 +54,33 @@ class UserService
         return $user->getUserName() ?? null;
     }
 
-    public function checkUserCredentials(array $data): array
+    public function checkUserCredentials(array $data)
     {
-        $user = $this->userRepository->findOneBy(['email' => $data['email']]);
+        $user = $this->userExists($data['email']);
 
-        if ($user && $this->passwordHasher->isPasswordValid($user, $data['password'])) {
-            return [
-                "source"  => "UserService::checkUserCredentials",
-                "type"    => "https://example.com/probs/success",
-                "title"   => "Connexion réussie",
-                "status"  => HttpStatusCodes::SUCCESS,
-                "detail"  => "Identifiants valides.",
-                "message" => "Connexion acceptée.",
-                "email"   => $user->getEmail(),
-            ];
+        if (! $user || ! $this->passwordHasher->isPasswordValid($user, $data['password'])) {
+            throw new ApiException(
+                "Invalid Credentials",
+                "Invalid Credentials",
+                "The provided email or password is incorrect",
+                HttpStatusCodes::UNAUTHORIZED
+            );
         }
 
-        throw new ApiException(
-            "Connexion impossible",
-            "Identifiants invalides.",
-            "Vérifiez vos informations de connexion.",
-            HttpStatusCodes::UNAUTHORIZED
-        );
+        return $user->getEmail();
     }
 
-    public function userExists(string $email): object | null
+    public function userExists(string $email): User
     {
-        return $this->userRepository->findOneBy(['email' => $email]) ?? null;
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+        if (! $user instanceof User) {
+            throw new ApiException(
+                "User Not Found",
+                "User Not Found",
+                "No user found associated to $email",
+                HttpStatusCodes::NOT_FOUND
+            );
+        }
+        return $user;
     }
 }
