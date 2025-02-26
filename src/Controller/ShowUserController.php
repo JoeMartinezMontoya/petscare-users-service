@@ -27,7 +27,7 @@ class ShowUserController extends AbstractController
             return new JsonResponse(['error' => 'Utilisateur introuvable avec l\'email'], 404);
         }
 
-        $user = $this->userService->findUserByEmail($userEmail);
+        $user = $this->userService->userExists($userEmail);
 
         if (! $user) {
             return new JsonResponse(['error' => 'Utilisateur introuvable'], 404);

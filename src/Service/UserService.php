@@ -83,7 +83,7 @@ class UserService
         );
     }
 
-    private function userExists(string $email): bool
+    public function userExists(string $email): bool
     {
         return $this->userRepository->findOneBy(['email' => $email]) !== null;
     }
