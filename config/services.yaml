@@ -1,5 +1,5 @@
 parameters:
-  auth_service_base_url: '%env(AUTH_SERVICE_BASE_URL)'
+  auth_service_url: '%env(AUTH_SERVICE_URL)%'
 
 services:
   _defaults:
@@ -16,7 +16,7 @@ services:
   App\EventListener\TokenValidationListener:
     arguments:
       $httpClient: '@http_client'
-      $loggerInterface: '@logger'
+      $params: '@parameter_bag'
     tags:
       - { name: kernel.event_listener, event: kernel.request, priority: 10 }
     public: true
