@@ -18,13 +18,13 @@ class UserService
         $this->passwordHasher = $passwordHasher;
     }
 
-    public function createUser(array $data): array
+    public function createUser(array $data): string | null
     {
-        if ($this->userExists($data['email'])) {
-            return $this->buildErrorResponse(
-                "UserService::createUser",
-                "Inscription annulée",
-                "L'adresse email est déjà associée à un utilisateur",
+        if (null !== $this->userExists($data['email'])) {
+            throw new ApiException(
+                "Registration canceled",
+                "Email already used",
+                "Please input another email adress",
                 HttpStatusCodes::CONFLICT
             );
         }
@@ -32,9 +32,9 @@ class UserService
         $birthdate = \DateTimeImmutable::createFromFormat('Y-m-d', $data['birthdate']);
         if (! $birthdate) {
             throw new ApiException(
-                "Invalid birthdate format",
-                "La date de naissance fournie est invalide.",
-                "Format attendu : YYYY-MM-DD",
+                "Registration canceled",
+                "Wrong birthdate format",
+                "Please input a correct birthdate format",
                 HttpStatusCodes::BAD_REQUEST
             );
         }
@@ -51,12 +51,7 @@ class UserService
 
         $this->userRepository->persistUser($user);
 
-        return $this->buildSuccessResponse(
-            "UserService::createUser",
-            "Inscription effectuée",
-            "Votre compte a été créé avec succès",
-            HttpStatusCodes::CREATED
-        );
+        return $user->getUserName() ?? null;
     }
 
     public function checkUserCredentials(array $data): array
@@ -64,51 +59,27 @@ class UserService
         $user = $this->userRepository->findOneBy(['email' => $data['email']]);
 
         if ($user && $this->passwordHasher->isPasswordValid($user, $data['password'])) {
-            return array_merge(
-                $this->buildSuccessResponse(
-                    "UserService::checkUserCredentials",
-                    "Connexion acceptée",
-                    "Identifiants valides",
-                    HttpStatusCodes::SUCCESS
-                ),
-                ["email" => $user->getEmail()]
-            );
+            return [
+                "source"  => "UserService::checkUserCredentials",
+                "type"    => "https://example.com/probs/success",
+                "title"   => "Connexion réussie",
+                "status"  => HttpStatusCodes::SUCCESS,
+                "detail"  => "Identifiants valides.",
+                "message" => "Connexion acceptée.",
+                "email"   => $user->getEmail(),
+            ];
         }
 
-        return $this->buildErrorResponse(
-            "UserService::checkUserCredentials",
+        throw new ApiException(
             "Connexion impossible",
-            "Identifiants invalides",
+            "Identifiants invalides.",
+            "Vérifiez vos informations de connexion.",
             HttpStatusCodes::UNAUTHORIZED
         );
     }
 
-    public function userExists(string $email): bool
+    public function userExists(string $email): object | null
     {
-        return $this->userRepository->findOneBy(['email' => $email]) !== null;
-    }
-
-    private function buildSuccessResponse(string $source, string $title, string $detail, int $status): array
-    {
-        return [
-            "source"  => $source,
-            "type"    => "https://example.com/probs/success",
-            "title"   => $title,
-            "status"  => $status,
-            "detail"  => $detail,
-            "message" => "Opération réussie",
-        ];
-    }
-
-    private function buildErrorResponse(string $source, string $title, string $detail, int $status): array
-    {
-        return [
-            "source"  => $source,
-            "type"    => "https://example.com/probs/error",
-            "title"   => $title,
-            "status"  => $status,
-            "detail"  => $detail,
-            "message" => "Erreur rencontrée",
-        ];
+        return $this->userRepository->findOneBy(['email' => $email]) ?? null;
     }
 }
