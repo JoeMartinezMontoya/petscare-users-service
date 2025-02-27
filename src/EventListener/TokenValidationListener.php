@@ -26,6 +26,7 @@ class TokenValidationListener
             '/api/auth/login-user',
             '/api/auth/register-user',
             '/api/users/check-user-credentials',
+            '/api/users/create-user',
         ];
 
         if (in_array($request->getPathInfo(), $excludedPaths, true)) {
