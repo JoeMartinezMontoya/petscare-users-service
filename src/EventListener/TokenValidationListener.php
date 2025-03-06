@@ -65,7 +65,7 @@ class TokenValidationListener
             throw new ApiException(
                 "Validation Impossible",
                 "Validation impossible",
-                "Could not validate token",
+                $e->getMessage(),
                 HttpStatusCodes::UNAUTHORIZED
             );
         }
