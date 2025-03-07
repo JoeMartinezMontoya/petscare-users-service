@@ -5,7 +5,9 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 RUN apt-get update && apt-get install -y \
     libzip-dev zip unzip git \
     libpng-dev libjpeg-dev libfreetype6-dev \
-    && docker-php-ext-install pdo pdo_mysql
+    && pecl install redis \
+    && docker-php-ext-install pdo pdo_mysql \
+    && docker-php-ext-enable redis
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

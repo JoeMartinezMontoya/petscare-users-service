@@ -5,19 +5,21 @@ use App\Entity\User;
 use App\Exception\ApiException;
 use App\Repository\UserRepository;
 use App\Utils\HttpStatusCodes;
+use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserService
 {
     private UserRepository $userRepository;
     private UserPasswordHasherInterface $passwordHasher;
+    private CacheItemPoolInterface $cache;
 
-    public function __construct(UserRepository $userRepository, UserPasswordHasherInterface $passwordHasher)
+    public function __construct(UserRepository $userRepository, UserPasswordHasherInterface $passwordHasher, CacheItemPoolInterface $cache)
     {
         $this->userRepository = $userRepository;
         $this->passwordHasher = $passwordHasher;
+        $this->cache          = $cache;
     }
-
     public function createUser(array $data): string | null
     {
         $user = $this->userExists($data['email']);
@@ -73,6 +75,15 @@ class UserService
 
     public function userExists(string $email): User | null
     {
-        return $this->userRepository->findOneBy(['email' => $email]) ?? null;
+        $cacheKey  = 'user_' . md5($email);
+        $cacheItem = $this->cache->getItem($cacheKey);
+
+        if (! $cacheItem->isHit()) {
+            $user = $this->userRepository->findOneBy(['email' => $email]);
+            $cacheItem->set($user);
+            $this->cache->save($cacheItem);
+        }
+
+        return $cacheItem->get() ?? null;
     }
 }
