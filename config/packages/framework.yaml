@@ -16,6 +16,13 @@ framework:
     #fragments: true
     php_errors:
         log: true
+    
+    cache:
+        pools:
+            doctrine.result_cache_pool:
+                adapter: cache.adapter.redis
+            doctrine.system_cache_pool:
+                adapter: cache.adapter.redis
 
 when@test:
     framework:
