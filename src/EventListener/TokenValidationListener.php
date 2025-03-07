@@ -1,75 +1,87 @@
 <?php
-
 namespace App\EventListener;
 
-use Psr\Log\LoggerInterface;
+use App\Exception\ApiException;
+use App\Utils\HttpStatusCodes;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class TokenValidationListener
 {
     private HttpClientInterface $httpClient;
-    private LoggerInterface $loggerInterface;
+    private string $authServiceUrl;
 
-    public function __construct(HttpClientInterface $httpClient, LoggerInterface $loggerInterface)
+    public function __construct(HttpClientInterface $httpClient, ParameterBagInterface $params)
     {
-        $this->httpClient      = $httpClient;
-        $this->loggerInterface = $loggerInterface;
+        $this->httpClient     = $httpClient;
+        $this->authServiceUrl = $params->get('auth_service_url');
     }
 
     public function onKernelRequest(RequestEvent $event): void
     {
         $request = $event->getRequest();
 
-        // Liste des routes à ignorer
         $excludedPaths = [
-            '/api/auth/login-user', // Route de connexion
-            '/api/auth/register-user', // Route d'inscription si applicable
-            '/api/users/create-user',
-            '/api/users/check-user',
+            '/api/auth/login-user',
+            '/api/auth/register-user',
             '/api/users/check-user-credentials',
+            '/api/users/create-user',
         ];
 
-        // Si la route est exclue, on ne fait rien
-        foreach ($excludedPaths as $path) {
-            if ($request->getPathInfo() === $path) {
-                return;
-            }
+        if (in_array($request->getPathInfo(), $excludedPaths, true)) {
+            return;
         }
 
-        // Vérifie le header Authorization
-        $authHeader = $request->headers->get('Authorization');
-        $this->loggerInterface->info("Authorization Header: " . $authHeader);
-
-        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
-            throw new UnauthorizedHttpException('Bearer', 'Token manquant ou invalide.');
-        }
+        $token = $this->extractToken($request->headers->get('Authorization'));
 
         try {
-            // Envoie le token pour validation
-            $token    = str_replace('Bearer ', '', $authHeader);
-            $response = $this->httpClient->request('POST', $_ENV['AUTH_SERVICE_BASE_URL'] . '/api/validate-token', [
+            $response = $this->httpClient->request('POST', $this->authServiceUrl . '/api/validate-token', [
                 'json' => ['token' => $token],
             ]);
 
-            // Si la validation échoue, renvoie une erreur
             if ($response->getStatusCode() !== 200) {
-                throw new UnauthorizedHttpException('Bearer', 'Token invalide.');
+                throw new ApiException(
+                    "Invalid Token",
+                    "Invalid bearer token",
+                    "Invalid bearer token",
+                    HttpStatusCodes::UNAUTHORIZED
+                );
             }
 
-            // Stocke le payload dans les attributs de la requête
             $payload = $response->toArray();
-            $this->loggerInterface->info("Payload: " . print_r($payload, true)); // Log du payload
 
-            // Avant de mettre le dd, je logge ici
-            $this->loggerInterface->info("Le payload est maintenant dans la requête");
+            if (! isset($payload['email'])) {
+                throw new ApiException(
+                    "Invalid Token",
+                    "Invalid response",
+                    "Invalid authentication respons, email adress missing",
+                    HttpStatusCodes::UNAUTHORIZED
+                );
+            }
 
             $request->attributes->set('email', $payload['email']);
         } catch (\Exception $e) {
-            // Log des erreurs
-            $this->loggerInterface->error("Erreur lors de la validation du token: " . $e->getMessage());
-            throw new UnauthorizedHttpException('Bearer', 'Erreur lors de la validation du token.');
+            throw new ApiException(
+                "Validation Impossible",
+                "Validation impossible",
+                $e->getMessage(),
+                HttpStatusCodes::UNAUTHORIZED
+            );
         }
+    }
+
+    private function extractToken(?string $authHeader): string
+    {
+        if (! $authHeader || ! str_starts_with($authHeader, 'Bearer ')) {
+            throw new ApiException(
+                "Missing Token",
+                "Missing bearer token",
+                "Missing bearer token",
+                HttpStatusCodes::UNAUTHORIZED
+            );
+        }
+
+        return substr($authHeader, 7);
     }
 }

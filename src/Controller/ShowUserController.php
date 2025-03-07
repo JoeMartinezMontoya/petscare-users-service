@@ -1,42 +1,49 @@
 <?php
-
 namespace App\Controller;
 
+use App\Exception\ApiException;
+use App\Service\UserService;
+use App\Utils\ApiResponse;
+use App\Utils\HttpStatusCodes;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Service\UserService;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class ShowUserController extends AbstractController
 {
-    private UserService $userService;
-    private SerializerInterface $serializer;
-
-    public function __construct(UserService $userService, SerializerInterface $serializer)
+    #[Route('/api/users/show-user', name: 'show_user', methods: ['GET'])]
+    public function __invoke(Request $request, UserService $userService, SerializerInterface $serializer): JsonResponse
     {
-        $this->userService = $userService;
-        $this->serializer = $serializer;
-    }
-
-    #[Route('/api/users/show-user', name: 'show-user', methods: ['GET'])]
-    public function __invoke(Request $request): JsonResponse
-    {
-        $userEmail = $request->attributes->get('email'); // data sent by middleware
-
-        if (!$userEmail) {
-            return new JsonResponse(['error' => 'Utilisateur introuvable avec l\'email'], 404);
+        $userEmail = $request->attributes->get('email');
+        if (! $userEmail) {
+            return ApiResponse::error([
+                "title"   => "Missing Parameter",
+                "detail"  => "Email parameter is missing in the request",
+                "message" => "Email is required to fetch user data",
+            ], HttpStatusCodes::BAD_REQUEST);
         }
 
-        $user = $this->userService->findUserByEmail($userEmail);
+        try {
+            $user     = $userService->userExists($userEmail);
+            $jsonUser = $serializer->serialize($user, 'json');
+            return ApiResponse::success(["user" => json_decode($jsonUser, true)], HttpStatusCodes::SUCCESS);
+        } catch (\Exception $e) {
 
-        if (!$user) {
-            return new JsonResponse(['error' => 'Utilisateur introuvable'], 404);
+            if ($e instanceof ApiException) {
+                return ApiResponse::error([
+                    "title"   => $e->getTitle(),
+                    "detail"  => $e->getDetail(),
+                    "message" => $e->getMessage(),
+                ], $e->getStatusCode());
+            }
+
+            return ApiResponse::error([
+                "title"   => "Unexpected Error",
+                "detail"  => "An unexpected error occurred while fetching the user's data",
+                "message" => $e->getMessage(),
+            ], HttpStatusCodes::SERVER_ERROR);
         }
-
-        $jsonUser = $this->serializer->serialize($user, 'json');
-
-        return new JsonResponse($jsonUser, 200, [], true); // true indique que $jsonUser est déjà du JSON
     }
 }
