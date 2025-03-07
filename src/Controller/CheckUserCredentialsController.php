@@ -1,43 +1,54 @@
 <?php
-
 namespace App\Controller;
 
+use App\Exception\ApiException;
 use App\Service\UserService;
+use App\Utils\ApiResponse;
+use App\Utils\HttpStatusCodes;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class CheckUserCredentialsController extends AbstractController
 {
-    private UserService $userService;
-
-    public function __construct(UserService $userService)
-    {
-        $this->userService = $userService;
-    }
-
-    #[Route('/api/users/check-user-credentials', name: 'check_user_credentials', methods: 'POST')]
-    public function __invoke(Request $request): JsonResponse
+    #[Route('/api/users/check-user-credentials', name: 'check_user_credentials', methods: ['POST'])]
+    public function __invoke(Request $request, UserService $userService, LoggerInterface $logger): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        $response = $this->userService->checkUserCredentials($data);
-
-        $data = [
-            "source"  => "UserService::checkUserCredentials",
-            "type"    => "https://example.com/probs/invalid-data",
-            "title"   => $response['title'],
-            "status"  => $response['status'],
-            "detail"  => $response['detail'],
-            "message" => $response['message'],
-        ];
-
-        if (Response::HTTP_OK === $response['status']) {
-            $data['email'] = $response['email'];
+        if (! $data) {
+            return ApiResponse::error([
+                "title"   => "Invalid JSON Payload",
+                "detail"  => "The request body is not a valid JSON",
+                "message" => "Invalid data provided",
+            ], HttpStatusCodes::BAD_REQUEST);
         }
 
-        return new JsonResponse($data, Response::HTTP_OK);
+        try {
+
+            $response = $userService->checkUserCredentials($data);
+            return ApiResponse::success([
+                "detail"  => "Login successful",
+                "message" => "Welcome back",
+                "email"   => $response,
+            ], HttpStatusCodes::SUCCESS);
+
+        } catch (\Exception $e) {
+            if ($e instanceof ApiException) {
+                return ApiResponse::error([
+                    "title"   => $e->getTitle(),
+                    "detail"  => $e->getDetail(),
+                    "message" => $e->getMessage(),
+                ], $e->getStatusCode());
+            }
+
+            return ApiResponse::error([
+                "title"   => "Unexpected Error",
+                "detail"  => "An unexpected error occurred while checking the user's credentials",
+                "message" => $e->getMessage(),
+            ], HttpStatusCodes::SERVER_ERROR);
+        }
     }
 }

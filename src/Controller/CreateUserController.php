@@ -1,55 +1,50 @@
 <?php
-
 namespace App\Controller;
 
+use App\Exception\ApiException;
 use App\Service\UserService;
+use App\Utils\ApiResponse;
+use App\Utils\HttpStatusCodes;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class CreateUserController extends AbstractController
 {
-    private UserService $userService;
-    private LoggerInterface $loggerInterface;
-
-    public function __construct(UserService $userService, LoggerInterface $loggerInterface)
-    {
-        $this->userService     = $userService;
-        $this->loggerInterface = $loggerInterface;
-    }
-
     #[Route('/api/users/create-user', name: 'create_user', methods: ['POST'])]
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, UserService $userService, LoggerInterface $logger): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-
-        $this->loggerInterface->info("Contenu de la requête: " . json_encode($data));
-
-        if (!$data || !isset($data['email'], $data['password'])) {
-            return new JsonResponse([
-                "source"  => 'CreateUserController',
-                "type"    => "https://example.com/probs/invalid-data",
-                "title"   => "Données invalide",
-                "status"  => Response::HTTP_BAD_REQUEST,
-                "detail"  => "Une adresse mail et un mot de passe sont requis",
-                "message" => "Invalid input data for registration.",
-            ], Response::HTTP_BAD_REQUEST);
+        if (! $data) {
+            return ApiResponse::error([
+                "title"   => "Invalid JSON Payload",
+                "detail"  => "The request body is not a valid JSON",
+                "message" => "Invalid data provided",
+            ], HttpStatusCodes::BAD_REQUEST);
         }
 
-        $result = $this->userService->createUser($data);
+        try {
+            $response = $userService->createUser($data);
+            return ApiResponse::success([
+                "detail"  => "User created",
+                "message" => "$response account has been successfully created",
+            ], HttpStatusCodes::CREATED);
+        } catch (\Exception $e) {
+            if ($e instanceof ApiException) {
+                return ApiResponse::error([
+                    "title"   => $e->getTitle(),
+                    "detail"  => $e->getDetail(),
+                    "message" => $e->getMessage(),
+                ], $e->getStatusCode());
+            }
 
-        $this->loggerInterface->info("Resultat: " . json_encode($result));
-
-        return new JsonResponse([
-            "source"  => 'CreateUserController',
-            "type"    => "https://example.com/probs/invalid-data",
-            "title"   => $result['title'],
-            "status"  => $result['status'],
-            "detail"  => $result['detail'],
-            "message" => $result['message'],
-        ], Response::HTTP_OK);
+            return ApiResponse::error([
+                "title"   => "Unexpected Error",
+                "detail"  => "An unexpected error occurred while creating the user",
+                "message" => $e->getMessage(),
+            ], HttpStatusCodes::SERVER_ERROR);
+        }
     }
 }
