@@ -76,19 +76,27 @@ class UserService
         return $user->getEmail();
     }
 
-    public function getUserData(string $email): string | null
+    public function getUserData(string $email): ?string
     {
         $cacheKey  = 'user_' . md5($email);
         $cacheItem = $this->cache->getItem($cacheKey);
 
-        if (! $cacheItem->isHit()) {
-            $user           = $this->userRepository->findOneBy(['email' => $email]);
-            $serializedUser = $this->serializer->serialize($user, 'json');
-            $cacheItem->set($serializedUser);
-            $cacheItem->expiresAfter(3600);
-            $this->cache->save($cacheItem);
+        if ($cacheItem->isHit()) {
+            return $cacheItem->get();
         }
 
-        return $cacheItem->get() ?? null;
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+
+        if (! $user) {
+            return null;
+        }
+
+        $serializedUser = $this->serializer->serialize($user, 'json');
+        $cacheItem->set($serializedUser);
+        $cacheItem->expiresAfter(3600);
+        $this->cache->save($cacheItem);
+
+        return $serializedUser;
     }
+
 }
