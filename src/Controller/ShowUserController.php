@@ -9,12 +9,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\SerializerInterface;
 
 class ShowUserController extends AbstractController
 {
     #[Route('/api/users/show-user', name: 'show_user', methods: ['GET'])]
-    public function __invoke(Request $request, UserService $userService, SerializerInterface $serializer): JsonResponse
+    public function __invoke(Request $request, UserService $userService): JsonResponse
     {
         $userEmail = $request->attributes->get('email');
         if (! $userEmail) {
@@ -26,9 +25,8 @@ class ShowUserController extends AbstractController
         }
 
         try {
-            $user     = $userService->userExists($userEmail);
-            $jsonUser = $serializer->serialize($user, 'json');
-            return ApiResponse::success(["user" => json_decode($jsonUser, true)], HttpStatusCodes::SUCCESS);
+            $user = $userService->getUserData($userEmail);
+            return ApiResponse::success(["user" => $user], HttpStatusCodes::SUCCESS);
         } catch (\Exception $e) {
 
             if ($e instanceof ApiException) {

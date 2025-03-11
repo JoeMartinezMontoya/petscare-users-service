@@ -5,7 +5,7 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 RUN apt-get update && apt-get install -y \
     libzip-dev zip unzip git \
     libpng-dev libjpeg-dev libfreetype6-dev \
-    && pecl install redis \
+    && pecl install redis redis-tools \
     && docker-php-ext-install pdo pdo_mysql \
     && docker-php-ext-enable redis
 
