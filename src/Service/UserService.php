@@ -80,23 +80,14 @@ class UserService
     {
         $cacheKey  = 'user_' . md5($email);
         $cacheItem = $this->cache->getItem($cacheKey);
-
-        if ($cacheItem->isHit()) {
-            return $cacheItem->get();
+        if (! $cacheItem->isHit()) {
+            $user = $this->serializer->serialize($this->userRepository->findOneBy(['email' => $email]), 'json');
+            $cacheItem->set($user);
+            $cacheItem->expiresAfter(86400);
+            $this->cache->save($cacheItem);
         }
 
-        $user = $this->userRepository->findOneBy(['email' => $email]);
-
-        if (! $user) {
-            return null;
-        }
-
-        $serializedUser = $this->serializer->serialize($user, 'json');
-        $cacheItem->set($serializedUser);
-        $cacheItem->expiresAfter(3600);
-        $this->cache->save($cacheItem);
-
-        return $serializedUser;
+        return $cacheItem->get();
     }
 
 }
