@@ -73,7 +73,12 @@ class UserService
             );
         }
 
-        return $user->getEmail();
+        $data = [
+            'id'    => $user->getId(),
+            'email' => $user->getEmail(),
+        ];
+
+        return $data;
     }
 
     public function getUserData(string $email): ?string
