@@ -21,22 +21,16 @@ class TokenValidationListener
     public function onKernelRequest(RequestEvent $event): void
     {
         $request = $event->getRequest();
+        $path    = $request->getPathInfo();
 
-        $excludedPaths = [
-            '/api/auth/login-user',
-            '/api/auth/register-user',
-            '/api/users/check-user-credentials',
-            '/api/users/create-user',
-        ];
-
-        if (in_array($request->getPathInfo(), $excludedPaths, true)) {
+        if (str_starts_with($path, '/public/')) {
             return;
         }
 
         $token = $this->extractToken($request->headers->get('Authorization'));
 
         try {
-            $response = $this->httpClient->request('POST', $this->authServiceUrl . '/api/validate-token', [
+            $response = $this->httpClient->request('POST', $this->authServiceUrl . '/public/api/validate-token', [
                 'json' => ['token' => $token],
             ]);
 

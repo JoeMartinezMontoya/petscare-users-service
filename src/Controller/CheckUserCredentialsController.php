@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class CheckUserCredentialsController extends AbstractController
 {
-    #[Route('/api/users/check-user-credentials', name: 'check_user_credentials', methods: ['POST'])]
+    #[Route('/public/api/users/check-user-credentials', name: 'check_user_credentials', methods: ['POST'])]
     public function __invoke(Request $request, UserService $userService): JsonResponse
     {
         $data = json_decode($request->getContent(), true);

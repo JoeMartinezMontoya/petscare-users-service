@@ -95,4 +95,10 @@ class UserService
         return $cacheItem->get();
     }
 
+    public function getUserPublicData(int $id): array
+    {
+        $user = $this->userRepository->findOneBy(['id' => $id]);
+        return $user->toArray();
+    }
+
 }
