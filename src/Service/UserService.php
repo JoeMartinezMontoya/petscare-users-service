@@ -101,4 +101,9 @@ class UserService
         return $user->toArray();
     }
 
+    public function getUsername(int $id): mixed
+    {
+        return $this->userRepository->findUsername($id)['userName'];
+    }
+
 }
