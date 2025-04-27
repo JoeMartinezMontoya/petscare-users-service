@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ShowUserController extends AbstractController
 {
-    #[Route('/api/users/show-user', name: 'show_user', methods: ['GET'])]
+    #[Route('/private/api/users/show-user', name: 'show_user', methods: ['GET'])]
     public function __invoke(Request $request, UserService $userService): JsonResponse
     {
         $userEmail = $request->attributes->get('email');

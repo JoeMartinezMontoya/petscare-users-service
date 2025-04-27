@@ -5,7 +5,6 @@ use App\Exception\ApiException;
 use App\Service\UserService;
 use App\Utils\ApiResponse;
 use App\Utils\HttpStatusCodes;
-use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,8 +12,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class CheckUserCredentialsController extends AbstractController
 {
-    #[Route('/api/users/check-user-credentials', name: 'check_user_credentials', methods: ['POST'])]
-    public function __invoke(Request $request, UserService $userService, LoggerInterface $logger): JsonResponse
+    #[Route('/public/api/users/check-user-credentials', name: 'check_user_credentials', methods: ['POST'])]
+    public function __invoke(Request $request, UserService $userService): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -30,9 +29,9 @@ class CheckUserCredentialsController extends AbstractController
 
             $response = $userService->checkUserCredentials($data);
             return ApiResponse::success([
-                "detail"  => "Login successful",
-                "message" => "Welcome back",
-                "email"   => $response,
+                "detail"   => "Login successful",
+                "message"  => "Welcome back",
+                "userData" => $response,
             ], HttpStatusCodes::SUCCESS);
 
         } catch (\Exception $e) {

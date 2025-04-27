@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Entity;
 
 use App\Repository\UserRepository;
@@ -138,5 +137,18 @@ class User implements PasswordAuthenticatedUserInterface
         $this->roles = $roles;
 
         return $this;
+    }
+
+    public function toArray()
+    {
+        return [
+            'id'        => $this->id,
+            'email'     => $this->email,
+            'userName'  => $this->userName,
+            'firstName' => $this->firstName,
+            'lastName'  => $this->lastName,
+            'birthDate' => $this->birthDate,
+            'createdAt' => $this->createdAt,
+        ];
     }
 }
