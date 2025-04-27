@@ -73,7 +73,12 @@ class UserService
             );
         }
 
-        return $user->getEmail();
+        $data = [
+            'id'    => $user->getId(),
+            'email' => $user->getEmail(),
+        ];
+
+        return $data;
     }
 
     public function getUserData(string $email): ?string
@@ -88,6 +93,17 @@ class UserService
         }
 
         return $cacheItem->get();
+    }
+
+    public function getUserPublicData(int $id): array
+    {
+        $user = $this->userRepository->findOneBy(['id' => $id]);
+        return $user->toArray();
+    }
+
+    public function getUsername(int $id): mixed
+    {
+        return $this->userRepository->findUsername($id)['userName'];
     }
 
 }
