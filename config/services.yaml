@@ -9,18 +9,29 @@ services:
   App\:
     resource: '../src/'
     exclude:
-      - '../src/DependencyInjection/'
-      - '../src/Entity/'
       - '../src/Kernel.php'
+      - '../src/Tests/'
 
-  App\EventListener\TokenValidationListener:
-    arguments:
-      $httpClient: '@http_client'
-      $params: '@parameter_bag'
+  App\Domain\Repository\UserRepositoryInterface:
+    alias: App\Infrastructure\Repository\UserRepository
+
+  App\Domain\Service\UuidGeneratorInterface:
+    alias: App\Infrastructure\Service\UuidGenerator
+
+  App\Infrastructure\EventListener\TokenValidationListener:
+    autowire: true
     tags:
       - { name: kernel.event_listener, event: kernel.request, priority: 10 }
     public: true
 
-  App\EventListener\ApiExceptionListener:
+  App\Infrastructure\EventListener\ApiExceptionListener:
     tags: 
       - { name: kernel.event_listener, event: kernel.exception }
+
+  App\Domain\Security\TokenValidatorInterface:
+    alias: App\Infrastructure\Security\TokenValidator
+
+  Predis\Client:
+    class: Predis\Client
+    arguments:
+      - '%env(CACHE_HOST)%'

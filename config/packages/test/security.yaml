@@ -1,0 +1,5 @@
+services:
+    App\EventListener\TokenValidationListener:
+        class: App\EventListener\TokenValidationListener
+        arguments: ['@http_client', '@parameter_bag']
+        tags: []
