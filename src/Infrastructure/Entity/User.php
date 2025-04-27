@@ -1,154 +1,95 @@
 <?php
 namespace App\Infrastructure\Entity;
 
-use App\Repository\UserRepository;
+use App\Infrastructure\Repository\UserRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User implements PasswordAuthenticatedUserInterface
+class User
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[ORM\Column(name: 'id', type: Types::STRING, unique: true)]
+    private string $id;
 
-    #[ORM\Column(length: 255)]
-    private ?string $email = null;
+    #[ORM\Column(name: 'userName', type: Types::STRING)]
+    private string $userName;
 
-    #[ORM\Column(length: 255)]
-    private ?string $password = null;
+    #[ORM\Column(name: 'firstName', type: Types::STRING)]
+    private string $firstName;
 
-    #[ORM\Column(length: 255)]
-    private ?string $userName = null;
+    #[ORM\Column(name: 'lastName', type: Types::STRING)]
+    private string $lastName;
 
-    #[ORM\Column(length: 255)]
-    private ?string $firstName = null;
+    #[ORM\Column(name: 'birthDate', type: Types::DATE_IMMUTABLE)]
+    private \DateTimeImmutable $birthDate;
 
-    #[ORM\Column(length: 255)]
-    private ?string $lastName = null;
+    #[ORM\Column(name: 'createdAt', type: Types::DATE_IMMUTABLE)]
+    private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $birthDate = null;
-
-    #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
-
-    #[ORM\Column(type : Types::JSON)]
-    private array $roles = [];
-
-    public function getId(): ?int
+    public function getId(): string
     {
         return $this->id;
     }
 
-    public function getEmail(): ?string
+    public function setId($id): User
     {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): static
-    {
-        $this->email = $email;
-
+        $this->id = $id;
         return $this;
     }
 
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(string $password): static
-    {
-        $this->password = $password;
-
-        return $this;
-    }
-
-    public function getUserName(): ?string
+    public function getUserName(): string
     {
         return $this->userName;
     }
 
-    public function setUserName(string $userName): static
+    public function setUserName($userName): User
     {
         $this->userName = $userName;
-
         return $this;
     }
 
-    public function getFirstName(): ?string
+    public function getFirstName(): string
     {
         return $this->firstName;
     }
 
-    public function setFirstName(string $firstName): static
+    public function setFirstName($firstName): User
     {
         $this->firstName = $firstName;
-
         return $this;
     }
 
-    public function getLastName(): ?string
+    public function getLastName(): string
     {
         return $this->lastName;
     }
 
-    public function setLastName(string $lastName): static
+    public function setLastName($lastName): User
     {
         $this->lastName = $lastName;
-
         return $this;
     }
 
-    public function getBirthDate(): ?\DateTimeImmutable
+    public function getBirthDate(): \DateTimeImmutable
     {
         return $this->birthDate;
     }
 
-    public function setBirthDate(\DateTimeImmutable $birthDate): static
+    public function setBirthDate($birthDate): User
     {
         $this->birthDate = $birthDate;
-
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    public function setCreatedAt($createdAt): User
     {
         $this->createdAt = $createdAt;
-
         return $this;
-    }
-
-    public function getRoles(): array
-    {
-        return $this->roles;
-    }
-
-    public function setRoles(array $roles): static
-    {
-        $this->roles = $roles;
-
-        return $this;
-    }
-
-    public function toArray()
-    {
-        return [
-            'id'        => $this->id,
-            'email'     => $this->email,
-            'userName'  => $this->userName,
-            'firstName' => $this->firstName,
-            'lastName'  => $this->lastName,
-            'birthDate' => $this->birthDate,
-            'createdAt' => $this->createdAt,
-        ];
     }
 }
