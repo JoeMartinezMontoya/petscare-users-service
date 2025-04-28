@@ -1,6 +1,15 @@
 <?php
 namespace App\Tests\Infrastructure\Repository;
 
+use App\Domain\Model\User;
+use App\Domain\ValueObjects\BirthDate;
+use App\Domain\ValueObjects\CreatedAt;
+use App\Domain\ValueObjects\FirstName;
+use App\Domain\ValueObjects\Id;
+use App\Domain\ValueObjects\LastName;
+use App\Domain\ValueObjects\UserName;
+use App\Infrastructure\Repository\UserRepository;
+use App\Infrastructure\Service\UuidGenerator;
 use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -8,19 +17,19 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 #[Group('repository')]
 class UserRepositoryTest extends KernelTestCase
 {
-    // private UserRepository $repository;
+    private UserRepository $repository;
 
-    // protected function setUp(): void
-    // {
-    //     parent::setUp();
-    //     $this->repository = static::getContainer()->get(AnnouncementRepository::class);
-    // }
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->repository = static::getContainer()->get(UserRepository::class);
+    }
 
-    // public function testMustSaveAnnouncementInDatabase(): void
-    // {
-    //     $result = $this->repository->save(self::domainAnnouncement());
-    //     $this->assertNotNull($result);
-    // }
+    public function testMustSaveAnnouncementInDatabase(): void
+    {
+        $result = $this->repository->save(self::domainUser());
+        $this->assertTrue($result);
+    }
 
     // public function testMustReturnAnErrorIfDataIsInvalid(): void
     // {
@@ -75,26 +84,15 @@ class UserRepositoryTest extends KernelTestCase
     //     $this->assertEquals(1, $updatedAnnouncement->getViewsCount()->getValue());
     // }
 
-    // private static function domainAnnouncement(bool $valid = true): Announcement
-    // {
-    //     return new Announcement(
-    //         $valid ? new Id((new UuidGenerator)->generate()) : null,
-    //         null,
-    //         $valid ? new Content('Lorem ipsum dolor sit amet consectetur adipisicing elit. Deserunt doloremque alias odit totam. Ea, veniam accusantium mollitia id vero expedita dolores. Provident perspiciatis sed, tempore ad exercitationem et inventore ipsa?') : null,
-    //         $valid ? new UserId((new UuidGenerator)->generate()) : null,
-    //         $valid ? new StartingDate(new \DateTimeImmutable('2025-04-30')) : null,
-    //         null,
-    //         $valid ? new CreatedAt(new \DateTimeImmutable()) : null,
-    //         null,
-    //         $valid ? new Location('Lyon') : null,
-    //         $valid ? new City('Lyon') : null,
-    //         $valid ? new Postcode('69006') : null,
-    //         $valid ? new Latitude(45.75) : null,
-    //         $valid ? new Longitude(4.85) : null,
-    //         $valid ? new PetId((new UuidGenerator)->generate()) : null,
-    //         $valid ? new ViewsCount(0) : null,
-    //         $valid ? new Type(1) : null,
-    //         $valid ? new Status(1) : null
-    //     );
-    // }
+    private static function domainUser(): User
+    {
+        return new User(
+            new Id((new UuidGenerator)->generate()),
+            new UserName('Admin'),
+            new FirstName('Eddie'),
+            new LastName('Van Halen'),
+            new BirthDate(new \DateTimeImmutable('1993-11-05')),
+            new CreatedAt(new \DateTimeImmutable())
+        );
+    }
 }

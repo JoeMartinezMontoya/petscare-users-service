@@ -1,44 +1,32 @@
 <?php
 namespace App\Infrastructure\Repository;
 
-use App\Infrastructure\Entity\User;
+use App\Domain\Model\User as DomainUser;
+use App\Domain\Repository\UserRepositoryInterface;
+use App\Infrastructure\Entity\User as InfrastructureUser;
+use App\Infrastructure\Mapper\UserMapper;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<User>
+ * @extends ServiceEntityRepository<InfrastructureUser>
  */
-class UserRepository extends ServiceEntityRepository
+class UserRepository extends ServiceEntityRepository implements UserRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(private UserMapper $mapper, ManagerRegistry $registry)
     {
-        parent::__construct($registry, User::class);
+        parent::__construct($registry, InfrastructureUser::class);
     }
 
-    public function persistUser(User $user)
+    public function save(DomainUser $user): bool
     {
-        $this->getEntityManager()->persist($user);
-        $this->getEntityManager()->flush();
-    }
-
-    //! Replace this by a simple findBy ??
-    public function findOneByEmail($email): ?User
-    {
-        return $this->createQueryBuilder('user')
-            ->andWhere('user.email = :email')
-            ->setParameter('email', $email)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-
-    public function findUsername(int $id): mixed
-    {
-        return $this->createQueryBuilder('user')
-            ->select('user.userName')
-            ->andWhere('user.id = :id')
-            ->setParameter('id', $id)
-            ->getQuery()
-            ->getOneOrNullResult();
+        $infrastructureUser = $this->mapper->mapToInfrastructure($user);
+        try {
+            $this->getEntityManager()->persist($infrastructureUser);
+            $this->getEntityManager()->flush();
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 }
