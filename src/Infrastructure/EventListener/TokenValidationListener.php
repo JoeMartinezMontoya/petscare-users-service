@@ -1,7 +1,7 @@
 <?php
 namespace App\Infrastructure\EventListener;
 
-use App\Domain\Security\TokenValidatorInterface;
+use App\Domain\Port\Security\TokenValidatorInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 
 class TokenValidationListener

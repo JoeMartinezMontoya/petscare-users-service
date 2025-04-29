@@ -1,7 +1,7 @@
 <?php
 namespace App\Tests\Infrastructure\Repository;
 
-use App\Domain\Model\User;
+use App\Domain\Model\UserProfile;
 use App\Domain\ValueObjects\BirthDate;
 use App\Domain\ValueObjects\CreatedAt;
 use App\Domain\ValueObjects\FirstName;
@@ -84,9 +84,9 @@ class UserRepositoryTest extends KernelTestCase
     //     $this->assertEquals(1, $updatedAnnouncement->getViewsCount()->getValue());
     // }
 
-    private static function domainUser(): User
+    private static function domainUser(): UserProfile
     {
-        return new User(
+        return new UserProfile(
             new Id((new UuidGenerator)->generate()),
             new UserName('Admin'),
             new FirstName('Eddie'),

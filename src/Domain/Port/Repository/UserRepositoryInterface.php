@@ -1,7 +1,7 @@
 <?php
 namespace App\Domain\Port\Repository;
 
-use App\Domain\Model\User as DomainUser;
+use App\Domain\Model\UserProfile as DomainUser;
 
 interface UserRepositoryInterface
 {

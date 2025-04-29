@@ -1,7 +1,7 @@
 <?php
 namespace App\Tests\Infrastructure\Security;
 
-use App\Domain\Security\TokenValidatorInterface;
+use App\Domain\Port\Security\TokenValidatorInterface;
 use App\Infrastructure\Exception\ApiException;
 use App\Infrastructure\Utils\HttpStatusCodes;
 use Symfony\Component\HttpFoundation\Request;

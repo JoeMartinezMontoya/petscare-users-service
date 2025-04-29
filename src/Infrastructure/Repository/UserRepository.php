@@ -1,9 +1,9 @@
 <?php
 namespace App\Infrastructure\Repository;
 
-use App\Domain\Model\User as DomainUser;
+use App\Domain\Model\UserProfile as DomainUser;
 use App\Domain\Port\Repository\UserRepositoryInterface;
-use App\Infrastructure\Entity\User as InfrastructureUser;
+use App\Infrastructure\Entity\UserProfile as InfrastructureUser;
 use App\Infrastructure\Mapper\UserMapper;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;

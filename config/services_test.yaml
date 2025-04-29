@@ -4,5 +4,5 @@ services:
     autoconfigure: true
     public: true
     
-  App\Domain\Security\TokenValidatorInterface:
+  App\Domain\Port\Security\TokenValidatorInterface:
     alias: App\Tests\Infrastructure\Security\FakeTokenValidator

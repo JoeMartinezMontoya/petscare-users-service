@@ -28,7 +28,7 @@ services:
     tags: 
       - { name: kernel.event_listener, event: kernel.exception }
 
-  App\Domain\Security\TokenValidatorInterface:
+  App\Domain\Port\Security\TokenValidatorInterface:
     alias: App\Infrastructure\Security\TokenValidator
 
   Predis\Client:

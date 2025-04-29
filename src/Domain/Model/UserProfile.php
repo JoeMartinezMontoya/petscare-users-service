@@ -8,7 +8,7 @@ use App\Domain\ValueObjects\Id;
 use App\Domain\ValueObjects\LastName;
 use App\Domain\ValueObjects\UserName;
 
-class User
+class UserProfile
 {
     public function __construct(
         private Id $id,

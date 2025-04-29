@@ -6,7 +6,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User
+class UserProfile
 {
     #[ORM\Id]
     #[ORM\Column(name: 'id', type: Types::STRING, unique: true)]
@@ -32,7 +32,7 @@ class User
         return $this->id;
     }
 
-    public function setId($id): User
+    public function setId($id): UserProfile
     {
         $this->id = $id;
         return $this;
@@ -43,7 +43,7 @@ class User
         return $this->userName;
     }
 
-    public function setUserName($userName): User
+    public function setUserName($userName): UserProfile
     {
         $this->userName = $userName;
         return $this;
@@ -54,7 +54,7 @@ class User
         return $this->firstName;
     }
 
-    public function setFirstName($firstName): User
+    public function setFirstName($firstName): UserProfile
     {
         $this->firstName = $firstName;
         return $this;
@@ -65,7 +65,7 @@ class User
         return $this->lastName;
     }
 
-    public function setLastName($lastName): User
+    public function setLastName($lastName): UserProfile
     {
         $this->lastName = $lastName;
         return $this;
@@ -76,7 +76,7 @@ class User
         return $this->birthDate;
     }
 
-    public function setBirthDate($birthDate): User
+    public function setBirthDate($birthDate): UserProfile
     {
         $this->birthDate = $birthDate;
         return $this;
@@ -87,7 +87,7 @@ class User
         return $this->createdAt;
     }
 
-    public function setCreatedAt($createdAt): User
+    public function setCreatedAt($createdAt): UserProfile
     {
         $this->createdAt = $createdAt;
         return $this;

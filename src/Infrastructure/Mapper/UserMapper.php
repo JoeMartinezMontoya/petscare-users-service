@@ -1,14 +1,14 @@
 <?php
 namespace App\Infrastructure\Mapper;
 
-use App\Domain\Model\User as DomainUser;
+use App\Domain\Model\UserProfile as DomainUser;
 use App\Domain\ValueObjects\BirthDate;
 use App\Domain\ValueObjects\CreatedAt;
 use App\Domain\ValueObjects\FirstName;
 use App\Domain\ValueObjects\Id;
 use App\Domain\ValueObjects\LastName;
 use App\Domain\ValueObjects\UserName;
-use App\Infrastructure\Entity\User as InfrastructureUser;
+use App\Infrastructure\Entity\UserProfile as InfrastructureUser;
 
 class UserMapper
 {

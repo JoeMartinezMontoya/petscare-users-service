@@ -1,7 +1,7 @@
 <?php
 namespace App\Application\UseCase;
 
-use App\Domain\Model\User;
+use App\Domain\Model\UserProfile;
 use App\Domain\Port\Client\AuthServiceClientInterface;
 use App\Domain\Port\Repository\UserRepositoryInterface;
 use App\Domain\ValueObjects\BirthDate;
@@ -44,7 +44,7 @@ class CreateUser
             );
         }
 
-        $user = new User(
+        $user = new UserProfile(
             new Id($uuid),
             new UserName($data['userName']),
             new FirstName($data['firstName']),
