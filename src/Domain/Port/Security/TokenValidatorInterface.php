@@ -1,5 +1,5 @@
 <?php
-namespace App\Domain\Security;
+namespace App\Domain\Port\Security;
 
 use Symfony\Component\HttpFoundation\Request;
 

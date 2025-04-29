@@ -1,5 +1,5 @@
 <?php
-namespace App\Domain\Repository;
+namespace App\Domain\Port\Repository;
 
 use App\Domain\Model\User as DomainUser;
 

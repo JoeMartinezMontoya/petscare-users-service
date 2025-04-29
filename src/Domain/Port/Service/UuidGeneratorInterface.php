@@ -1,5 +1,5 @@
 <?php
-namespace App\Domain\Service;
+namespace App\Domain\Port\Service;
 
 interface UuidGeneratorInterface
 {

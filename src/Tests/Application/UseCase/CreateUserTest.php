@@ -2,12 +2,11 @@
 namespace App\Tests\Application\UseCase;
 
 use App\Application\UseCase\CreateUser;
-use App\Domain\Repository\UserRepositoryInterface;
+use App\Domain\Port\Client\AuthServiceClientInterface;
+use App\Domain\Port\Repository\UserRepositoryInterface;
 use App\Infrastructure\Exception\ApiException;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[Group('unit')]
 #[Group('usecase')]
@@ -18,12 +17,10 @@ final class CreateUserTest extends TestCase
         $repository = $this->createMock(UserRepositoryInterface::class);
         $repository->expects($this->once())->method('save')->willReturn(true);
 
-        $httpClient = $this->createMock(HttpClientInterface::class);
+        $authServiceInterface = $this->createMock(AuthServiceClientInterface::class);
+        $authServiceInterface->expects($this->once())->method('createUser')->willReturn(true);
 
-        $params = $this->createMock(ParameterBagInterface::class);
-        $params->expects($this->once())->method('get')->willReturn('http://auth-service');
-
-        $useCase = new CreateUser($repository, $httpClient, $params);
+        $useCase = new CreateUser($repository, $authServiceInterface);
 
         $data = [
             'userName'  => 'EddieVH',
@@ -41,11 +38,10 @@ final class CreateUserTest extends TestCase
     public function testMustReturnAnErrorIfInvalidDataProvided()
     {
 
-        $repository = $this->createMock(UserRepositoryInterface::class);
-        $httpClient = $this->createMock(HttpClientInterface::class);
-        $params     = $this->createMock(ParameterBagInterface::class);
+        $repository           = $this->createMock(UserRepositoryInterface::class);
+        $authServiceInterface = $this->createMock(AuthServiceClientInterface::class);
 
-        $useCase = new CreateUser($repository, $httpClient, $params);
+        $useCase = new CreateUser($repository, $authServiceInterface);
 
         $data = [
             'userName'  => 'EddieVH',
